@@ -28,6 +28,10 @@ class TasksController extends Controller
 
     public function store(Request $request)
     {
+        $request->validate([
+            'content' => 'required|max:255',
+        ]);
+        
         $task = new Task;
         $task->content = $request->content;
         $task->save();
