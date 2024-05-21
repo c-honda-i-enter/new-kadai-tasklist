@@ -3,7 +3,6 @@
     <li><a class="link link-hover" href="#">{{ Auth::user()->name }}&#39;s Tasks</a></li>
     {{-- タスク編集ページへのリンク --}}
     <li><a class="link link-hover" href="#">edit</a></li>
-    
     {{-- ログアウトへのリンク --}}
     <li><a class="link link-hover" href="#" onclick="event.preventDefault();this.closest('form').submit();">Logout</a></li>
 @else

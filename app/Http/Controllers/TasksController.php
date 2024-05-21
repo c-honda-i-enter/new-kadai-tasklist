@@ -10,20 +10,14 @@ class TasksController extends Controller
 {
     public function index()
     {
-        $data = [];
         if (\Auth::check()) {
             $user = \Auth::user();
             
             $tasks = $user->tasks()->orderBy('created_at', 'desc')->paginate(10);
-            $data = [
-                'user' => $user,
-                'tasklists' => $tasks,
-            ];
             
             return view('tasks.index', [
-            'tasks' => $tasks,
+                'tasks' => $tasks,
             ]);
-            
         }
         
         return view('dashboard');
@@ -89,9 +83,10 @@ class TasksController extends Controller
         $task = Task::findOrFail($id);
         
         if (\Auth::id() === $task->user_id) {
-            $task->status = $request->status;
-            $task->content = $request->content;
-            $task->save();
+            $request->user()->tasks()->update([
+                'status' => $request->status,
+                'content' => $request->content,
+            ]);
         }
         
         return redirect('/');
@@ -103,8 +98,8 @@ class TasksController extends Controller
         
         if (\Auth::id() === $task->user_id) {
             $task->delete();
-            return back()
-                ->with('success','Delete Successful');
+            // return back()
+            //     ->with('success','Delete Successful');
         }
 
         return redirect('/');
