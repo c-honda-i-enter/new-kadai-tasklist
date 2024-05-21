@@ -10,11 +10,23 @@ class TasksController extends Controller
 {
     public function index()
     {
-        $tasks = Task::all();
-        
-        return view('tasks.index', [
+        $data = [];
+        if (\Auth::check()) {
+            $user = \Auth::user();
+            
+            $tasks = $user->tasks()->orderBy('created_at', 'desc')->paginate(10);
+            $data = [
+                'user' => $user,
+                'tasklists' => $tasks,
+            ];
+            
+            return view('tasks.index', [
             'tasks' => $tasks,
-        ]);
+            ]);
+            
+        }
+        
+        return view('dashboard');
     }
 
     public function create()
@@ -33,10 +45,10 @@ class TasksController extends Controller
             'content' => 'required|max:255',
         ]);
         
-        $task = new Task;
-        $task->title = $request->title;
-        $task->content = $request->content;
-        $task->save();
+        $request->user()->tasks()->create([
+            'status' => $request->status,
+            'content' => $request->content,
+        ]);
         
         return redirect('/');
     }
@@ -45,18 +57,26 @@ class TasksController extends Controller
     {
         $task = Task::findOrFail($id);
         
-        return view('tasks.show', [
-            'task' => $task,
-        ]);
+        if (\Auth::id() === $task->user_id) {
+            return view('tasks.show', [
+                'task' => $task,
+            ]);
+        }
+        
+        return redirect('/');
     }
 
     public function edit(string $id)
     {
         $task = Task::findOrFail($id);
         
-        return view('tasks.edit', [
-            'task' => $task,
-        ]);
+        if (\Auth::id() === $task->user_id) {
+            return view('tasks.edit', [
+                'task' => $task,
+            ]);
+        }
+        
+        return redirect('/');
     }
 
     public function update(Request $request, string $id)
@@ -68,9 +88,11 @@ class TasksController extends Controller
         
         $task = Task::findOrFail($id);
         
-        $task->title = $request->title;
-        $task->content = $request->content;
-        $task->save();
+        if (\Auth::id() === $task->user_id) {
+            $task->status = $request->status;
+            $task->content = $request->content;
+            $task->save();
+        }
         
         return redirect('/');
     }
@@ -79,6 +101,12 @@ class TasksController extends Controller
     {
         $task = Task::findOrFail($id);
         
-        $task->delete('/');
+        if (\Auth::id() === $task->user_id) {
+            $task->delete();
+            return back()
+                ->with('success','Delete Successful');
+        }
+
+        return redirect('/');
     }
 }
